@@ -2,6 +2,8 @@
 
 import os
 import sys
+import time
+import platform
 # single thread doubles cuda performance - needs to be set before torch import
 if any(arg.startswith('--execution-provider') for arg in sys.argv):
     os.environ['OMP_NUM_THREADS'] = '1'
@@ -129,6 +131,8 @@ def update_status(message: str, scope: str = 'ROOP.CORE') -> None:
 
 
 def start() -> None:
+    # Chronometer time to measure performance
+    start_time = time.time()
     for frame_processor in get_frame_processors_modules(roop.globals.frame_processors):
         if not frame_processor.pre_start():
             return
@@ -197,7 +201,14 @@ def start() -> None:
         update_status('Processing to video succeed!')
     else:
         update_status('Processing to video failed!')
-
+        
+    update_status(f'Elapsed time : {int((time.time() - start_time) / 60)} minutes and {int((time.time() - start_time) % 60)} seconds')
+    print(f'Platform uname: {platform.uname()}')
+    print(f'Platform processor: {platform.processor()}')
+    print(f'Platform python version: {platform.python_version()}')
+    print(f'Available providers: {onnxruntime.get_available_providers()}')
+    print(f'Execution provider: {roop.globals.execution_providers}')
+    print(f'Execution thread: {roop.globals.execution_threads}')
 
 def destroy() -> None:
     if roop.globals.target_path:
